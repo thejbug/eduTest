@@ -3,6 +3,7 @@
 #include "qpainter.h"
 #include <QSvgRenderer>
 #include "iostream"
+#include "QGraphicsBlurEffect"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -10,7 +11,49 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    //ui->testLabel.set
+    sidebar = new QLabel(this);
+    //sidebar->setMinimumWidth(300);
+    //sidebar->setMaximumWidth(300);
+    //sidebar->setMinimumHeight(300);
+    //sidebar->setMaximumHeight(300);
+    sidebar->setGeometry(-300, 0, 300, height());
+    //sidebar->setGraphicsEffect(new QGraphicsBlurEffect);
+    //sidebar->setPixmap(QPixmap::grabWidget(this));
+
+    sidebar->setStyleSheet(QString("background-color: rgba(255,255,255,150);"));
+    //this->setWindowOpacity(0.5);
+    //this->setAttribute(Qt::WA_TranslucentBackground);
+//    QImage transparent(300, height(), QImage::Format_ARGB32);
+//    for(int i = 0; i < transparent.height(); i ++){
+//        //for(int )
+//    }
+
+    //sidebar->setPixmap()
+
+    sidebar->show();
+
+    sidebarClose = new QPropertyAnimation(sidebar, "pos");
+    sidebarClose->setDuration(150);
+    sidebarClose->setStartValue(QPoint(0,0));
+    sidebarClose->setEndValue(QPoint(-300,0));
+
+    sidebarVisible = false;
+
+    sidebarOpen = new QPropertyAnimation(sidebar, "pos");
+    sidebarOpen->setDuration(150);
+    sidebarOpen->setStartValue(QPoint(-300,0));
+    sidebarOpen->setEndValue(QPoint(0,0));
+
+    ui->collapseButton->setGeometry(25, 25, 115, 32);
+    buttonOpen = new QPropertyAnimation(ui->collapseButton, "pos");
+    buttonOpen->setDuration(150);
+    buttonOpen->setStartValue(QPoint(25,25));
+    buttonOpen->setEndValue(QPoint(325,25));
+
+    buttonClose = new QPropertyAnimation(ui->collapseButton, "pos");
+    buttonClose->setDuration(150);
+    buttonClose->setStartValue(QPoint(325,25));
+    buttonClose->setEndValue(QPoint(25,25));
 
 
     //ON MOUSE CLICK / ENTER PRESSED (WHEN THE MODEL IS CHANGED)
@@ -54,44 +97,84 @@ MainWindow::MainWindow(QWidget *parent)
     //redraw it with a different color, on top of the old one?)
 
 
+    connect(ui->selectButton, &QPushButton::pressed, ui->testLabel, &SandboxCanvas::selectPressed);
+    connect(ui->wireButton, &QPushButton::pressed, ui->testLabel, &SandboxCanvas::wirePressed);
+    connect(ui->gateButton, &QPushButton::pressed, ui->testLabel, &SandboxCanvas::gatePressed);
+
+//    connect(ui->gateButton, &QPushButton::pressed, [=](){
+//        QRect rect = sidebar->rect();
+//        std::cout << rect.x() << ", " << rect.y() << ", " << rect.width() << ", " << rect.height() << std::endl;
+//        //QImage image = grab(sidebar->rect()).toImage();
+//        //this->parentWidget()
+//        sidebar->hide();
+////        QPixmap pxmp = this->grab();
+
+////        QLabel tempLabel;
+////        tempLabel.setGeometry(0,0, sidebar->width(), sidebar->height());
+////        tempLabel.setPixmap(pxmp);
+////        tempLabel.setGraphicsEffect(new QGraphicsBlurEffect);
+////        QPixmap blurred(sidebar->width(), sidebar->height());
+////        QPainter painter(&blurred);
+////        tempLabel.render(&painter);
+
+////        sidebar->setPixmap(blurred);
+
+//        QImage background = this->grab(rect).toImage();
+//        int h = background.height();
+//        int w = background.width();
+//        QImage blurred(background.width(), background.height(), QImage::Format_RGB32);
+//        for(int row = 0; row < background.height(); row ++){
+//            for(int col = 0; col < background.width(); col ++){
+
+//                int radius = 5;
+//                int rsqr = (radius * 2 + 1)*(radius * 2 + 1);
+//                int sumR = 0;
+//                int sumG = 0;
+//                int sumB = 0;
+//                for(int rb = row - radius; rb < row + radius; rb ++){
+//                    for(int cb = col - radius; cb < col + radius; cb ++){
+
+//                        if(rb < 0 || rb > h - 1 || cb < 0 || cb > w - 1){
+//                            rsqr -= 1;
+//                            continue;
+//                        }
+//                        QColor bc = background.pixelColor(cb, rb);
+//                        sumR += bc.red();
+//                        sumG += bc.green();
+//                        sumB += bc.blue();
+//                    }
+//                }
+//                int avgR = sumR / rsqr;
+//                int avgG = sumG / rsqr;
+//                int avgB = sumB / rsqr;
+//                //std::cout << avgR << ", " << avgG << ", " << avgB << std::endl;
+//                //QColor bc = background.pixelColor(col, row);
 
 
+//                blurred.setPixelColor(col, row, QColor(avgR, avgG, avgB));
+//                //blurred.setPixelColor(col, row, bc);
 
-
-
-//    QImage image(100,100, QImage::Format_RGB32);
-//    for(int row = 0; row < image.height(); row ++){
-//        for (int col = 0; col < image.width(); col ++){
-//            QColor c(255,255,255,255);
-//            image.setPixelColor(col, row, c);
+//            }
 //        }
-//    }
+//        sidebar->setPixmap(QPixmap::fromImage(blurred));
+//        sidebar->show();
+//        //sidebar->setScaledContents(true);
+//    });
 
-//    QPen pen;
+    connect(ui->collapseButton, &QPushButton::pressed, this, &MainWindow::collapseExpand);
+}
 
-//    pen.setColor(QColor(255,0,0));
-//    pen.setWidth(10);
+void MainWindow::collapseExpand()
+{
+    if(sidebarVisible){
+        sidebarClose->start();
+        buttonClose->start();
+    } else {
+        sidebarOpen->start();
+        buttonOpen->start();
+    }
+    sidebarVisible = !sidebarVisible;
 
-
-
-
-//    QPainter painter(&image);
-
-//    QSvgRenderer svg(QString("/Users/jaredemery/Downloads/hourglass-half-solid.svg"));
-
-//    std::cout << "is valid: " << svg.isValid() << std::endl;
-//    svg.render(&painter);
-
-//    painter.setPen(pen);
-
-//    painter.drawLine(5,5, 20, 20);
-
-
-//    ui->testLabel->setPixmap(QPixmap::fromImage(image));
-//    ui->testLabel->setScaledContents(true);
-
-    //ui->testLabel = new SandboxCanvas(this);
-    ui->testLabel->setStyleSheet(QString("background-color: black;"));
 }
 
 MainWindow::~MainWindow()

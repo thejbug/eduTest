@@ -12,12 +12,39 @@ float dist(Point p1, Point p2)
     return sqrt(dx*dx + dy*dy);
 }
 
+void SandboxCanvas::snapTo(Point p){
+    float radius = 15;
+    float currentMin = 1 << 30;
+
+    //for each wire endpoint
+    for(int i = 0; i < nodes.size(); i ++){
+        Node* node = nodes[i];
+
+        for(int j = 0; j < node->endpoints.size(); j ++){
+            Endpoint end = node->endpoints[j];
+
+            float d = dist(p, end.pos);
+
+            if(d < currentMin && d < radius){
+                snappedNode = node;
+                indexOfSnappedEndpoint = j;
+                currentMin = d;
+
+            }
+        }
+    }
+}
+
 SandboxCanvas::SandboxCanvas(QWidget * parent):
     QLabel(parent)
 {
     image = new QImage(width(), height(), QImage::Format_RGB32);
     setMouseTracking(true);
     p1Free = true;
+    snappedNode = nullptr;
+    mode = 0;
+
+    arrow.load(QString("/Users/jaredemery/Downloads/arrow-right-solid.svg"));
 }
 
 void SandboxCanvas::mouseMoveEvent(QMouseEvent *mouse)
@@ -41,126 +68,176 @@ void SandboxCanvas::mouseMoveEvent(QMouseEvent *mouse)
     pen.setColor(QColor(255,100,0));
     painter.setPen(pen);
 
-    for(Line line: lines){
-        painter.drawLine(line.p1.x, line.p1.y, line.p2.x, line.p2.y);
+    for(Line* line: lines){
+        painter.drawLine(line->p1.x, line->p1.y, line->p2.x, line->p2.y);
     }
 
-    //workingLine.p1 = Point(x1, y1);
+    for(Node* node: nodes){
+        if(node->svg){
+            int w = 50;
+            int posX = node->posx;
+            int posY = node->posy;
+            QRect rect(posX - w/2, posY - w/2, w, w);
+
+            node->svg->render(&painter, rect);
+        }
+    }
+
+
     Point p1;
     Point p2;
 
-    float radius = 15;
-    if(p1Free)
-    {
+    snappedNode = nullptr;
 
-        p1 = Point(x1, y1);
+    //select mode
+    if(mode == 0){
 
-        float dmin = 1 << 20;
-        for(Line line: lines){
-            float dist1 = dist(p1, line.p1);
-            float dist2 = dist(p1, line.p2);
+    }    
 
-            if(dist1 < radius && dist1 < dmin){
-                dmin = dist1;
-                p1 = line.p1;
+    //wire mode
+    else if (mode == 1){
+
+        pen.setColor(QColor(175,175,175));
+        pen.setWidth(8);
+        painter.setPen(pen);
+
+        if(p1Free){
+            p2 = p1 = Point(x1, y1);
+
+            snapTo(p1);
+
+            if(snappedNode){
+                p1 = p2 = snappedNode->endpoints[indexOfSnappedEndpoint].pos;
             }
-            if(dist2 < radius && dist2 < dmin){
-                dmin = dist2;
-                p1 = line.p2;
+
+            workingLine.p1 = p1;
+        }
+        else {
+
+            p1 = workingLine.p1;
+            p2 = Point(x1, y1);
+
+            snapTo(p2);
+
+            if(snappedNode){
+                p2 = snappedNode->endpoints[indexOfSnappedEndpoint].pos;
             }
+
+            workingLine.p2 = p2;
         }
 
-        workingLine.p1 = p2 = p1;
+
+
+
+        painter.drawLine(p1.x, p1.y, p2.x, p2.y);
     }
-    else
-    {
-        p1 = workingLine.p1;
-        p2 = Point(x1, y1);
 
+    else if (mode == 2){
 
-        float dmin = 1 << 20;
-        for(Line line: lines){
-            float dist1 = dist(p2, line.p1);
-            float dist2 = dist(p2, line.p2);
+        int rectw = 50;
+        int recth = 50;
+        QRect rect(x1 - rectw / 2, y1 - recth/2, 50, 50);
 
-            if(dist1 < radius && dist1 < dmin){
-                dmin = dist1;
-                p2 = line.p1;
-            }
-            if(dist2 < radius && dist2 < dmin){
-                dmin = dist2;
-                p2 = line.p2;
-            }
-        }
-        workingLine.p2 = p2;
+        arrow.render(&painter, rect);
     }
 
 
-    pen.setColor(QColor(175,175,175));
-    painter.setPen(pen);
-
-    painter.drawLine(p1.x, p1.y, p2.x, p2.y);
     setPixmap(QPixmap::fromImage(*image));
 }
 
-void SandboxCanvas::mousePressEvent(QMouseEvent *ev)
+void SandboxCanvas::mousePressEvent(QMouseEvent *mouse)
 {
-    std::cout << width() << ", " << height();
 
-    if(!p1Free){
-        lines.push_back(workingLine);
+    int mouseX = mouse->x();
+    int mouseY = mouse->y();
+
+    if(mode == 1){
+        //placing the first point of a wire
+        if(p1Free){
+            //first line point was placed freely
+            if(!snappedNode){
+                Node* newNode = new Node;
+
+                //there's no wire yet, so the endpoint has nothing to point to
+                newNode->endpoints.push_back(Endpoint(Point(mouseX, mouseY), nullptr));
+                workingLine.n1Endpoint = 0;
+
+                nodes.push_back(newNode);
+                //nodes should record their pos and have pointers to wires
+            }
+            //first line point was snapped onto an existing node
+            else {
+                snappedNode->endpoints.push_back(Endpoint(workingLine.p1, nullptr));
+                workingLine.n1Endpoint = snappedNode->endpoints.size() - 1;
+            }
+        }
+        //placing the second point
+        else {
+            //if the second point was placed freely
+            if(!snappedNode){
+                Node* newNode = new Node;
+                Node* previousNode = nodes[nodes.size() - 1];
+
+
+
+                Line* line = new Line(workingLine.p1, Point(mouseX, mouseY));
+                line->n1Endpoint = workingLine.n1Endpoint;
+                line->n2Endpoint = 0;
+
+                //give the new node an endpoint with a pointer to the wire
+                newNode->endpoints.push_back(Endpoint(Point(mouseX, mouseY), line));
+                //give the endpoint on the other node a pointer to the wire also
+                previousNode->endpoints[workingLine.n1Endpoint].wire = line;
+
+                nodes.push_back(newNode);
+                lines.push_back(line);
+            }
+            //if the second point was snapped onto an existing node
+            else {
+                Line* line = new Line(workingLine.p1, workingLine.p2);
+                line->n1Endpoint = workingLine.n1Endpoint;
+                line->n2Endpoint = indexOfSnappedEndpoint;
+                //snappedNode->endpoints.push_back(Endpoint(workingLine.p2, ))
+            }
+        }
+
+        p1Free = !p1Free;
+    }
+    else if (mode == 2){
+
+        if(!snappedNode){
+
+            Node* newNode = new Node;
+            newNode->posx = mouseX;
+            newNode->posy = mouseY;
+            newNode->svg = new QSvgRenderer(QString("/Users/jaredemery/Downloads/arrow-right-solid.svg"));
+
+            nodes.push_back(newNode);
+        }
     }
 
-    p1Free = !p1Free;
 
-    mouseMoveEvent(ev);
+    //mouseMoveEvent(mouse);
 }
 
 void SandboxCanvas::mouseReleaseEvent(QMouseEvent *ev)
 {
 
 }
+void SandboxCanvas::selectPressed(){
+    std::cout << "select" << std::endl;
+    mode = 0;
+}
 
-//        p1 = Point(x1, y1);
-//        p2 = Point(x1, y1);
+void SandboxCanvas::wirePressed(){
+    std::cout << "wire" << std::endl;
 
-//        float dmin = 1 << 20;
-//        Point snapPoint;
-//        int whichPoint = 0;
+    mode = 1;
+}
 
-//        for(Line line: lines){
-//            float dist1_1 = dist(p1, line.p1);
-//            float dist1_2 = dist(p1, line.p2);
-//            float dist2_1 = dist(p2, line.p1);
-//            float dist2_2 = dist(p2, line.p2);
+void SandboxCanvas::gatePressed(){
+    std::cout << "gate" << std::endl;
 
-//            if(dist1_1 < radius && dist1_1 < dmin){
-//                dmin = dist1_1;
-//                snapPoint = line.p1;
-//                whichPoint = 1;
-//            }
-//            if(dist1_2 < radius && dist1_2 < dmin){
-//                dmin = dist1_2;
-//                snapPoint = line.p2;
-//                whichPoint = 1;
-//            }
-//            if(dist2_1 < radius && dist2_1 < dmin){
-//                dmin = dist2_1;
-//                snapPoint = line.p1;
-//                whichPoint = 2;
-//            }
-//            if(dist2_2 < radius && dist2_2 < dmin){
-//                dmin = dist2_2;
-//                snapPoint = line.p2;
-//                whichPoint = 2;
-//            }
-//        }
+    mode = 2;
+}
 
-//        if(whichPoint == 1){
-//            p1 = snapPoint;
-//        } else if(whichPoint == 2){
-//            p2 = snapPoint;
-//            std::swap(p2, p1);
-//        }
-//        workingLine.p1 = p1;
-//        workingLine.p2 = p2;
