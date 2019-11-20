@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "qpropertyanimation.h"
 #include "qlabel.h"
+#include <QGraphicsBlurEffect>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -28,5 +29,6 @@ private:
     QPropertyAnimation* buttonClose;
     QPropertyAnimation* buttonOpen;
     bool sidebarVisible;
+    QGraphicsBlurEffect* effect;
 };
 #endif // MAINWINDOW_H

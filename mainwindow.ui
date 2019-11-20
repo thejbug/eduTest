@@ -14,65 +14,75 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="SandboxCanvas" name="testLabel">
+   <widget class="QWidget" name="widget" native="true">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>170</y>
-      <width>601</width>
-      <height>351</height>
+      <x>30</x>
+      <y>60</y>
+      <width>731</width>
+      <height>481</height>
      </rect>
     </property>
-    <property name="text">
-     <string>TextLabel</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="selectButton">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>120</y>
-      <width>113</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>select</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="wireButton">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>120</y>
-      <width>113</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>wire</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="gateButton">
-    <property name="geometry">
-     <rect>
-      <x>340</x>
-      <y>120</y>
-      <width>113</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>gate</string>
-    </property>
+    <widget class="SandboxCanvas" name="testLabel">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>90</y>
+       <width>601</width>
+       <height>351</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="gateButton">
+     <property name="geometry">
+      <rect>
+       <x>300</x>
+       <y>20</y>
+       <width>113</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>gate</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="wireButton">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>20</y>
+       <width>113</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>wire</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="selectButton">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>20</y>
+       <width>101</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>select</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QPushButton" name="collapseButton">
     <property name="geometry">
      <rect>
-      <x>500</x>
-      <y>10</y>
-      <width>113</width>
-      <height>32</height>
+      <x>10</x>
+      <y>20</y>
+      <width>91</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="text">

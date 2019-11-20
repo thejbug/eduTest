@@ -5,12 +5,15 @@
 #include "iostream"
 #include "QGraphicsBlurEffect"
 
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    effect = new QGraphicsBlurEffect();
+    ui->widget->setGraphicsEffect(effect);
+    effect->setEnabled(false);
     sidebar = new QLabel(this);
     //sidebar->setMinimumWidth(300);
     //sidebar->setMaximumWidth(300);
@@ -21,8 +24,11 @@ MainWindow::MainWindow(QWidget *parent)
     //sidebar->setPixmap(QPixmap::grabWidget(this));
 
     sidebar->setStyleSheet(QString("background-color: rgba(255,255,255,150);"));
+//    ui->widget->setStyleSheet(QString("background-color: rgba(0,0,0,150);"));
+//    ui->widget->setMask()
+
     //this->setWindowOpacity(0.5);
-    //this->setAttribute(Qt::WA_TranslucentBackground);
+    //this->setAttribute(Qt::WA_TranslucentBackground)
 //    QImage transparent(300, height(), QImage::Format_ARGB32);
 //    for(int i = 0; i < transparent.height(); i ++){
 //        //for(int )
@@ -30,6 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     //sidebar->setPixmap()
 
+    QPushButton * collapseSidebarBtn = new QPushButton("close", sidebar);
     sidebar->show();
 
     sidebarClose = new QPropertyAnimation(sidebar, "pos");
@@ -44,16 +51,18 @@ MainWindow::MainWindow(QWidget *parent)
     sidebarOpen->setStartValue(QPoint(-300,0));
     sidebarOpen->setEndValue(QPoint(0,0));
 
-    ui->collapseButton->setGeometry(25, 25, 115, 32);
-    buttonOpen = new QPropertyAnimation(ui->collapseButton, "pos");
-    buttonOpen->setDuration(150);
-    buttonOpen->setStartValue(QPoint(25,25));
-    buttonOpen->setEndValue(QPoint(325,25));
 
-    buttonClose = new QPropertyAnimation(ui->collapseButton, "pos");
-    buttonClose->setDuration(150);
-    buttonClose->setStartValue(QPoint(325,25));
-    buttonClose->setEndValue(QPoint(25,25));
+    ui->collapseButton->setGeometry(25, 25, 115, 32);
+
+//    buttonOpen = new QPropertyAnimation(ui->collapseButton, "pos");
+//    buttonOpen->setDuration(150);
+//    buttonOpen->setStartValue(QPoint(25,25));
+//    buttonOpen->setEndValue(QPoint(325,25));
+
+//    buttonClose = new QPropertyAnimation(ui->collapseButton, "pos");
+//    buttonClose->setDuration(150);
+//    buttonClose->setStartValue(QPoint(325,25));
+//    buttonClose->setEndValue(QPoint(25,25));
 
 
     //ON MOUSE CLICK / ENTER PRESSED (WHEN THE MODEL IS CHANGED)
@@ -162,20 +171,25 @@ MainWindow::MainWindow(QWidget *parent)
 //    });
 
     connect(ui->collapseButton, &QPushButton::pressed, this, &MainWindow::collapseExpand);
+    connect(collapseSidebarBtn, &QPushButton::pressed, this, &MainWindow::collapseExpand);
 }
 
 void MainWindow::collapseExpand()
 {
     if(sidebarVisible){
+        ui->collapseButton->show();
         sidebarClose->start();
-        buttonClose->start();
+        effect->setEnabled(false);
+
     } else {
+        ui->collapseButton->hide();
         sidebarOpen->start();
-        buttonOpen->start();
+        effect->setEnabled(true);
     }
     sidebarVisible = !sidebarVisible;
 
 }
+
 
 MainWindow::~MainWindow()
 {
