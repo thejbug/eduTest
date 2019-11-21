@@ -12,9 +12,10 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     effect = new QGraphicsBlurEffect();
-    ui->widget->setGraphicsEffect(effect);
+    //ui->blurWidget->setGraphicsEffect(effect);
+    //this->setGraphicsEffect(effect);
     effect->setEnabled(false);
-    sidebar = new QLabel(this);
+    sidebar = new BlurredSidebar(this);
     //sidebar->setMinimumWidth(300);
     //sidebar->setMaximumWidth(300);
     //sidebar->setMinimumHeight(300);
@@ -23,7 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
     //sidebar->setGraphicsEffect(new QGraphicsBlurEffect);
     //sidebar->setPixmap(QPixmap::grabWidget(this));
 
-    sidebar->setStyleSheet(QString("background-color: rgba(255,255,255,150);"));
+    sidebar->setStyleSheet(QString("background-color: rgba(255,255,255,200);"));
+    //sidebar->setGraphicsEffect(effect);
+
 //    ui->widget->setStyleSheet(QString("background-color: rgba(0,0,0,150);"));
 //    ui->widget->setMask()
 
@@ -36,33 +39,35 @@ MainWindow::MainWindow(QWidget *parent)
 
     //sidebar->setPixmap()
 
-    QPushButton * collapseSidebarBtn = new QPushButton("close", sidebar);
-    sidebar->show();
+
 
     sidebarClose = new QPropertyAnimation(sidebar, "pos");
-    sidebarClose->setDuration(150);
+    //sidebarClose->state
+    sidebarClose->setDuration(2000);
     sidebarClose->setStartValue(QPoint(0,0));
     sidebarClose->setEndValue(QPoint(-300,0));
+    connect(sidebarClose, &QPropertyAnimation::valueChanged, sidebar, &BlurredSidebar::blurBackground);
 
     sidebarVisible = false;
 
     sidebarOpen = new QPropertyAnimation(sidebar, "pos");
-    sidebarOpen->setDuration(150);
+    sidebarOpen->setDuration(2000);
     sidebarOpen->setStartValue(QPoint(-300,0));
     sidebarOpen->setEndValue(QPoint(0,0));
+    connect(sidebarOpen, &QPropertyAnimation::valueChanged, sidebar, &BlurredSidebar::blurBackground);
 
 
     ui->collapseButton->setGeometry(25, 25, 115, 32);
 
-//    buttonOpen = new QPropertyAnimation(ui->collapseButton, "pos");
-//    buttonOpen->setDuration(150);
-//    buttonOpen->setStartValue(QPoint(25,25));
-//    buttonOpen->setEndValue(QPoint(325,25));
+    buttonOpen = new QPropertyAnimation(ui->collapseButton, "pos");
+    buttonOpen->setDuration(2000);
+    buttonOpen->setStartValue(QPoint(25,25));
+    buttonOpen->setEndValue(QPoint(325,25));
 
-//    buttonClose = new QPropertyAnimation(ui->collapseButton, "pos");
-//    buttonClose->setDuration(150);
-//    buttonClose->setStartValue(QPoint(325,25));
-//    buttonClose->setEndValue(QPoint(25,25));
+    buttonClose = new QPropertyAnimation(ui->collapseButton, "pos");
+    buttonClose->setDuration(2000);
+    buttonClose->setStartValue(QPoint(325,25));
+    buttonClose->setEndValue(QPoint(25,25));
 
 
     //ON MOUSE CLICK / ENTER PRESSED (WHEN THE MODEL IS CHANGED)
@@ -110,79 +115,47 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->wireButton, &QPushButton::pressed, ui->testLabel, &SandboxCanvas::wirePressed);
     connect(ui->gateButton, &QPushButton::pressed, ui->testLabel, &SandboxCanvas::gatePressed);
 
-//    connect(ui->gateButton, &QPushButton::pressed, [=](){
+    connect(ui->gateButton, &QPushButton::pressed, [=](){
 //        QRect rect = sidebar->rect();
 //        std::cout << rect.x() << ", " << rect.y() << ", " << rect.width() << ", " << rect.height() << std::endl;
 //        //QImage image = grab(sidebar->rect()).toImage();
 //        //this->parentWidget()
-//        sidebar->hide();
-////        QPixmap pxmp = this->grab();
+        sidebar->hide();
+        QPixmap background = this->grab();
+        int radius = 75;
 
-////        QLabel tempLabel;
-////        tempLabel.setGeometry(0,0, sidebar->width(), sidebar->height());
-////        tempLabel.setPixmap(pxmp);
-////        tempLabel.setGraphicsEffect(new QGraphicsBlurEffect);
-////        QPixmap blurred(sidebar->width(), sidebar->height());
-////        QPainter painter(&blurred);
-////        tempLabel.render(&painter);
+        QLabel tempLabel;
+        tempLabel.setGeometry(0,0, sidebar->width() + radius, sidebar->height());
+        tempLabel.setPixmap(background);
+        QGraphicsBlurEffect* effect = new QGraphicsBlurEffect;
+        effect->setBlurRadius(radius);
+        effect->setEnabled(true);
 
-////        sidebar->setPixmap(blurred);
+        tempLabel.setGraphicsEffect(effect);
 
-//        QImage background = this->grab(rect).toImage();
-//        int h = background.height();
-//        int w = background.width();
-//        QImage blurred(background.width(), background.height(), QImage::Format_RGB32);
-//        for(int row = 0; row < background.height(); row ++){
-//            for(int col = 0; col < background.width(); col ++){
+        QPixmap blurred = tempLabel.grab();
 
-//                int radius = 5;
-//                int rsqr = (radius * 2 + 1)*(radius * 2 + 1);
-//                int sumR = 0;
-//                int sumG = 0;
-//                int sumB = 0;
-//                for(int rb = row - radius; rb < row + radius; rb ++){
-//                    for(int cb = col - radius; cb < col + radius; cb ++){
+        sidebar->setPixmap(blurred);
+        sidebar->show();
 
-//                        if(rb < 0 || rb > h - 1 || cb < 0 || cb > w - 1){
-//                            rsqr -= 1;
-//                            continue;
-//                        }
-//                        QColor bc = background.pixelColor(cb, rb);
-//                        sumR += bc.red();
-//                        sumG += bc.green();
-//                        sumB += bc.blue();
-//                    }
-//                }
-//                int avgR = sumR / rsqr;
-//                int avgG = sumG / rsqr;
-//                int avgB = sumB / rsqr;
-//                //std::cout << avgR << ", " << avgG << ", " << avgB << std::endl;
-//                //QColor bc = background.pixelColor(col, row);
-
-
-//                blurred.setPixelColor(col, row, QColor(avgR, avgG, avgB));
-//                //blurred.setPixelColor(col, row, bc);
-
-//            }
-//        }
-//        sidebar->setPixmap(QPixmap::fromImage(blurred));
-//        sidebar->show();
-//        //sidebar->setScaledContents(true);
-//    });
+    });
 
     connect(ui->collapseButton, &QPushButton::pressed, this, &MainWindow::collapseExpand);
-    connect(collapseSidebarBtn, &QPushButton::pressed, this, &MainWindow::collapseExpand);
+    //connect(collapseSidebarBtn, &QPushButton::pressed, this, &MainWindow::collapseExpand);
 }
 
 void MainWindow::collapseExpand()
 {
+    std::cout << std::endl;
     if(sidebarVisible){
-        ui->collapseButton->show();
+        //ui->collapseButton->show();
+        buttonClose->start();
         sidebarClose->start();
         effect->setEnabled(false);
 
     } else {
-        ui->collapseButton->hide();
+        //ui->collapseButton->hide();
+        buttonOpen->start();
         sidebarOpen->start();
         effect->setEnabled(true);
     }

@@ -5,6 +5,7 @@
 #include "qpropertyanimation.h"
 #include "qlabel.h"
 #include <QGraphicsBlurEffect>
+#include "blurredsidebar.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,7 +24,7 @@ public slots:
 
 private:
     Ui::MainWindow *ui;
-    QLabel* sidebar;
+    BlurredSidebar* sidebar;
     QPropertyAnimation* sidebarClose;
     QPropertyAnimation* sidebarOpen;
     QPropertyAnimation* buttonClose;
